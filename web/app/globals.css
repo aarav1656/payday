@@ -1,0 +1,241 @@
+/* Hallmark · genre: editorial · macrostructure: Remittance slip (pay stub + share certificate + cheque) · theme: Atelier
+ * nav: N9 edge-aligned · footer: Ft6 letter close
+ * display: Young Serif · fields: Courier Prime · prose: Hanken Grotesk · accent: ochre ~3%
+ */
+@import "tailwindcss";
+@import "tw-animate-css";
+
+:root {
+  --desk: oklch(90.3% 0.031 86);
+  --sheet: oklch(97.6% 0.016 92);
+  --cheque: oklch(93.3% 0.031 95);
+  --rule: oklch(79.7% 0.046 84);
+  --rule-strong: oklch(64.0% 0.055 84);
+  --ink: oklch(23.7% 0.021 70);
+  --ink-2: oklch(37.3% 0.027 69);
+  --ink-3: oklch(46.6% 0.035 73);
+  --ochre: oklch(48.5% 0.109 61);
+  --ochre-ink: oklch(97.1% 0.018 86);
+  --stop: oklch(45.5% 0.143 31);
+  --warn: oklch(45.3% 0.093 90);
+  --ok: oklch(43.2% 0.074 153);
+
+  /* shadcn semantic names, mapped onto the Atelier tokens */
+  --background: var(--desk);
+  --foreground: var(--ink);
+  --card: var(--sheet);
+  --card-foreground: var(--ink);
+  --popover: var(--sheet);
+  --popover-foreground: var(--ink);
+  --primary: var(--ochre);
+  --primary-foreground: var(--ochre-ink);
+  --secondary: var(--cheque);
+  --secondary-foreground: var(--ink);
+  --muted: var(--cheque);
+  --muted-foreground: var(--ink-3);
+  --accent: var(--cheque);
+  --accent-foreground: var(--ink);
+  --destructive: var(--stop);
+  --border: var(--rule);
+  --input: var(--ink-3);
+  --ring: var(--ochre);
+  --radius: 0.125rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-desk: var(--desk);
+  --color-sheet: var(--sheet);
+  --color-cheque: var(--cheque);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ochre: var(--ochre);
+  --color-stop: var(--stop);
+  --color-warn: var(--warn);
+  --color-ok: var(--ok);
+
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-young), ui-serif, Georgia, serif;
+  --font-mono: var(--font-courier), "Courier New", ui-monospace, monospace;
+  --font-heading: var(--font-serif);
+
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 2px;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    overflow-x: clip;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+    overflow-x: clip;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ochre);
+    outline-offset: 2px;
+  }
+  h1, h2, h3 {
+    @apply font-serif;
+    font-style: normal;
+    overflow-wrap: anywhere;
+  }
+  ::selection {
+    background: var(--ochre);
+    color: var(--ochre-ink);
+  }
+}
+
+@layer components {
+  /* Typewriter field label on the stub. */
+  .label {
+    @apply font-mono text-[0.75rem] font-bold uppercase tracking-[0.1em] text-ink-3;
+  }
+  .fig {
+    @apply font-mono tabular-nums;
+  }
+  .amount {
+    @apply font-serif;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  /* Accounting total: a double rule under the last line, like the foot of a pay slip. */
+  .total-rule {
+    border-bottom: 4px double var(--ink);
+  }
+  /* Dot leader between a label and its figure. */
+  .leader {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .leader::before {
+    content: "";
+    order: 1;
+    flex: 1;
+    min-width: 1rem;
+    border-bottom: 2px dotted var(--rule-strong);
+    transform: translateY(-0.2em);
+  }
+  .leader > :first-child {
+    order: 0;
+  }
+  .leader > :last-child {
+    order: 2;
+  }
+  /* Paper lying on the desk, with a torn perforated top and bottom edge. */
+  .sheet-wrap {
+    filter: drop-shadow(0 1px 0 var(--rule-strong)) drop-shadow(0 12px 14px oklch(30% 0.05 70 / 0.14));
+  }
+  .sheet {
+    --p: 6px;
+    background: var(--sheet);
+    -webkit-mask:
+      radial-gradient(circle var(--p) at 50% 0, #0000 97%, #000) top / calc(var(--p) * 3) 51% repeat-x,
+      radial-gradient(circle var(--p) at 50% 100%, #0000 97%, #000) bottom / calc(var(--p) * 3) 51% repeat-x;
+    mask:
+      radial-gradient(circle var(--p) at 50% 0, #0000 97%, #000) top / calc(var(--p) * 3) 51% repeat-x,
+      radial-gradient(circle var(--p) at 50% 100%, #0000 97%, #000) bottom / calc(var(--p) * 3) 51% repeat-x;
+  }
+  /* Share certificate: engraved frame and hatched share block. */
+  .cert {
+    background:
+      repeating-linear-gradient(45deg, oklch(23.7% 0.021 70 / 0.035) 0 1px, transparent 1px 6px),
+      var(--cheque);
+    border: 3px double var(--rule-strong);
+    outline: 1px solid var(--rule-strong);
+    outline-offset: -9px;
+  }
+  .cert-bar {
+    display: grid;
+    height: 1.75rem;
+    border: 1px solid var(--ink);
+  }
+  .cert-base {
+    background: repeating-linear-gradient(135deg, var(--ink) 0 1px, transparent 1px 5px);
+  }
+  .cert-sliver {
+    background: var(--ochre);
+    transform-origin: left center;
+    animation: fill 900ms 250ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  /* Cheque: guilloche wash and a VOID stripe when the market says no. */
+  .cheque {
+    background:
+      repeating-linear-gradient(-45deg, oklch(48.5% 0.109 61 / 0.05) 0 1px, transparent 1px 4px),
+      var(--cheque);
+    border: 1px solid var(--rule-strong);
+    border-top: 2px dashed var(--rule-strong);
+  }
+  .void-mark {
+    border: 3px solid var(--stop);
+    color: var(--stop);
+    transform: rotate(-5deg);
+  }
+  .rise {
+    animation: rise 180ms ease-out both;
+    animation-delay: calc(var(--i, 0) * 40ms);
+  }
+}
+
+@keyframes fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .cert-sliver {
+    animation: none;
+  }
+  * {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+  button:active {
+    transform: none !important;
+  }
+}
