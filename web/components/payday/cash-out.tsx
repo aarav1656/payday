@@ -15,8 +15,8 @@ const localTime = (ms: number) =>
   new Date(ms).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hour12: false });
 
 export function CashOut({
-  address, symbol, sellTokens, stub, accruedUsd, accruedShares, multiplier,
-}: { address: string; symbol: string; sellTokens: number; stub: string; accruedUsd: number; accruedShares: number; multiplier: number }) {
+  address, symbol, sellTokens, slipNo, accruedUsd, accruedShares, multiplier,
+}: { address: string; symbol: string; sellTokens: number; slipNo: string; accruedUsd: number; accruedShares: number; multiplier: number }) {
   const [state, setState] = useState<State>({ kind: "idle" });
 
   async function run() {
@@ -58,14 +58,14 @@ export function CashOut({
       </div>
       <div aria-live="polite" className="mt-5 empty:hidden">
         {state.kind === "error" && <Note tone="stop">{state.message}</Note>}
-        {state.kind === "done" && <Cheque q={state.quote} address={address} stub={stub} symbol={symbol} accruedUsd={accruedUsd} />}
+        {state.kind === "done" && <Cheque q={state.quote} address={address} slipNo={slipNo} symbol={symbol} accruedUsd={accruedUsd} />}
       </div>
     </div>
   );
 }
 
 /** The dry-run quote printed as a cheque. A refused quote prints VOID with the reason Binance gave. */
-export function Cheque({ q, address, stub, symbol, accruedUsd }: { q: CashOutQuote; address: string; stub: string; symbol: string; accruedUsd: number }) {
+export function Cheque({ q, address, slipNo, symbol, accruedUsd }: { q: CashOutQuote; address: string; slipNo: string; symbol: string; accruedUsd: number }) {
   const [settle, setSettle] = useState<Settle>({ kind: "none" });
   const short = `${address.slice(0, 6)}…${address.slice(-4)}`;
   const void_ = q.blocked !== null;
@@ -76,7 +76,7 @@ export function Cheque({ q, address, stub, symbol, accruedUsd }: { q: CashOutQuo
       <div className="p-5 md:p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
           <p className="label">Payday cheque · quote</p>
-          <p className="fig text-[0.8125rem] text-ink-2">No. {stub} · {utcTime(q.at)} UTC</p>
+          <p className="fig text-[0.8125rem] text-ink-2">No. {slipNo} · {utcTime(q.at)} UTC</p>
         </div>
 
         <p className="label mt-5">Pay to the order of</p>

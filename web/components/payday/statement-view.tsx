@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getAddress } from "viem";
-import { BadAddress, buildStatement, EXAMPLE_ADDRESS, stubNumber, type HoldingLine } from "@/lib/payday";
+import { BadAddress, buildStatement, EXAMPLE_ADDRESS, slipNumber, type HoldingLine } from "@/lib/payday";
 import { MIN_CASHOUT_USD } from "@/lib/cashout-rules";
 import { tokens, usd, utcDate, utcTime } from "@/lib/shared/format";
 import { Note } from "./bits";
@@ -19,7 +19,7 @@ export async function StatementView({ address }: { address: string }) {
     return <Note tone="stop">The chain or Binance&apos;s token list did not answer. Reload in a moment; nothing was changed.</Note>;
   }
 
-  const stub = stubNumber(st.address);
+  const slipNo = slipNumber(st.address);
   const payTo = getAddress(st.address);
   const lineCount = `${st.holdings.length} ${st.holdings.length === 1 ? "line" : "lines"}`;
   const header = (
@@ -29,7 +29,7 @@ export async function StatementView({ address }: { address: string }) {
         <p className="label">Earnings statement</p>
       </div>
       <dl className="fig mt-6 grid grid-cols-2 gap-x-6 gap-y-3 text-[0.875rem]">
-        <Field term="Stub no." value={stub} />
+        <Field term="Stub no." value={slipNo} />
         <Field term="Advice date" value={`${utcTime(st.asOf)} UTC`} />
         <Field term="Block" value={st.block.toLocaleString("en-US")} />
         <Field term="Tokens checked" value={`${st.scanned} Ondo`} />
@@ -99,7 +99,7 @@ export async function StatementView({ address }: { address: string }) {
         <div className="border-b-2 border-ink">
         <ol className="divide-y divide-rule">
           {shown.map((h, i) => (
-            <Line key={h.address} h={h} i={i} address={payTo} stub={stub} asOf={st.asOf} />
+            <Line key={h.address} h={h} i={i} address={payTo} slipNo={slipNo} asOf={st.asOf} />
           ))}
         </ol>
         {rest.length > 0 && (
@@ -112,7 +112,7 @@ export async function StatementView({ address }: { address: string }) {
             </summary>
             <ol className="divide-y divide-rule">
               {rest.map((h, i) => (
-                <Line key={h.address} h={h} i={i} address={payTo} stub={stub} asOf={st.asOf} />
+                <Line key={h.address} h={h} i={i} address={payTo} slipNo={slipNo} asOf={st.asOf} />
               ))}
             </ol>
           </details>
@@ -145,7 +145,7 @@ function sentence(h: HoldingLine) {
   return `${tokens(h.tokens)} ${h.symbol} now stand for ${tokens(h.tokens * h.multiplier)} shares of ${who}. ${tokens(h.accruedShares)} of those shares arrived as dividends over the pay period, worth ${usd(h.accruedUsd)} at ${h.stockUsd === null ? "today's price" : usd(h.stockUsd) + " a share"}.`;
 }
 
-function Line({ h, i, address, stub, asOf }: { h: HoldingLine; i: number; address: string; stub: string; asOf: number }) {
+function Line({ h, i, address, slipNo, asOf }: { h: HoldingLine; i: number; address: string; slipNo: string; asOf: number }) {
   return (
     <li className="rise py-6" style={{ ["--i" as string]: i }}>
       <div className="md:grid md:grid-cols-[minmax(0,1fr)_6.5rem_6.5rem_6.5rem] md:items-baseline md:gap-x-4">
@@ -165,7 +165,7 @@ function Line({ h, i, address, stub, asOf }: { h: HoldingLine; i: number; addres
         <p className="mt-4 text-[0.875rem] text-ink-3">Below the {usd(MIN_CASHOUT_USD, 0)} minimum. It keeps accruing.</p>
       )}
       {h.status === "earning" && h.payoutTokens > 0 && h.accruedUsd >= MIN_CASHOUT_USD && (
-        <CashOut address={address} symbol={h.symbol} sellTokens={h.payoutTokens} stub={stub} accruedUsd={h.accruedUsd} accruedShares={h.accruedShares} multiplier={h.multiplier} />
+        <CashOut address={address} symbol={h.symbol} sellTokens={h.payoutTokens} slipNo={slipNo} accruedUsd={h.accruedUsd} accruedShares={h.accruedShares} multiplier={h.multiplier} />
       )}
     </li>
   );

@@ -76,7 +76,7 @@ async function companyNames(addresses: Address[]): Promise<Map<Address, string |
 }
 
 /** Stub number printed on the statement: the first 8 hex digits of keccak256(address). */
-export const stubNumber = (address: Address) => `PD-${keccak256(address).slice(2, 10).toUpperCase()}`;
+export const slipNumber = (address: Address) => `PD-${keccak256(address).slice(2, 10).toUpperCase()}`;
 
 /** Dividend statement for every Ondo token the address holds on BSC. Reads chain balances; no signing. */
 export async function buildStatement(rawAddress: string): Promise<Statement> {
