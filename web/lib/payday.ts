@@ -233,13 +233,22 @@ export async function cashOutDryRun(rawAddress: string, symbol: string): Promise
 export interface CarryingRow { symbol: string; ticker: string; company: string | null; multiplier: number; sharesPer100: number }
 
 /** Ondo tokens whose share rate is above 1 right now (from Binance's token list). Split-sized jumps are excluded. */
-export async function carryingDividends(limit = 8): Promise<{ rows: CarryingRow[]; total: number; scanned: number }> {
-  const { listVersions } = await rwa();
+export async function carryingDividends(limit = 8): Promise<{ rows: CarryingRow[]; total: number; scanned: number; topStockUsd: number | null }> {
+  const { listVersions, priceVersions } = await rwa();
   const ondo = (await listVersions()).filter((v) => v.issuer === "ondo");
   const carrying = ondo.filter((v) => v.multiplier > 1.0001 && v.multiplier < 1.5).sort((a, b) => b.multiplier - a.multiplier);
   const top = carrying.slice(0, limit);
   const names = await companyNames(top.map((v) => v.address));
+  let topStockUsd: number | null = null;
+  if (top[0]) {
+    try {
+      topStockUsd = (await priceVersions([top[0]]))[0]?.stockUsd ?? null;
+    } catch (e) {
+      console.error("top price", e instanceof Error ? e.message : e);
+    }
+  }
   return {
+    topStockUsd,
     total: carrying.length,
     scanned: ondo.length,
     rows: top.map((v) => ({ symbol: v.symbol, ticker: v.ticker, company: names.get(v.address) ?? null, multiplier: v.multiplier, sharesPer100: v.multiplier * 100 })),

@@ -82,7 +82,7 @@ export async function StatementView({ address }: { address: string }) {
 
         {top.status === "earning" && (
           <div className="mt-8">
-            <Certificate company={top.company} symbol={top.symbol} ticker={top.ticker} multiplier={top.multiplier} baseline={top.baseline} />
+            <Certificate company={top.company} symbol={top.symbol} ticker={top.ticker} multiplier={top.multiplier} baseline={top.baseline} stockUsd={top.stockUsd} />
           </div>
         )}
 

@@ -22,7 +22,7 @@ export async function IdleView() {
       </p>
       {top && (
         <div className="mt-6 max-w-[40rem]">
-          <Certificate company={top.company} symbol={top.symbol} ticker={top.ticker} multiplier={top.multiplier} baseline={1} />
+          <Certificate company={top.company} symbol={top.symbol} ticker={top.ticker} multiplier={top.multiplier} baseline={1} stockUsd={data.topStockUsd} />
         </div>
       )}
       <table className="mt-8 w-full max-w-[40rem] border-y border-rule-strong text-left">
