@@ -6,6 +6,11 @@ import type { NextConfig } from "next";
 const repoRoot = path.join(import.meta.dirname, "..");
 
 const nextConfig: NextConfig = {
+  // Vercel traces server files from the repo root so ../src and the root package.json ("type":"module") ship with the functions.
+  outputFileTracingRoot: repoRoot,
+  outputFileTracingIncludes: {
+    "/**/*": ["../src/**/*", "../package.json"],
+  },
   turbopack: {
     root: repoRoot,
     rules: {
