@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { getAddress } from "viem";
 import { BadAddress, buildStatement, EXAMPLE_ADDRESS, stubNumber, type HoldingLine } from "@/lib/payday";
+import { MIN_CASHOUT_USD } from "@/lib/cashout-rules";
 import { tokens, usd, utcTime } from "@/lib/shared/format";
 import { Note } from "./bits";
 import { Certificate } from "./certificate";
 import { CashOut } from "./cash-out";
 
-const VISIBLE_LINES = 6;
+const DUST_USD = 1;
 
 export async function StatementView({ address }: { address: string }) {
   let st;
@@ -71,8 +72,9 @@ export async function StatementView({ address }: { address: string }) {
   }
 
   const top = st.holdings[0];
-  const shown = st.holdings.slice(0, VISIBLE_LINES);
-  const rest = st.holdings.slice(VISIBLE_LINES);
+  const shown = st.holdings.filter((h) => h.accruedUsd >= DUST_USD);
+  const rest = st.holdings.filter((h) => h.accruedUsd < DUST_USD);
+  const restTotal = rest.reduce((sum, h) => sum + h.accruedUsd, 0);
 
   return (
     <article className="sheet-wrap" aria-labelledby="stmt">
@@ -94,6 +96,7 @@ export async function StatementView({ address }: { address: string }) {
         </div>
         <p className="label mt-8 border-b border-ink pb-2 md:hidden">Earnings</p>
 
+        <div className="border-b-2 border-ink">
         <ol className="divide-y divide-rule">
           {shown.map((h, i) => (
             <Line key={h.address} h={h} i={i} address={payTo} stub={stub} />
@@ -101,9 +104,11 @@ export async function StatementView({ address }: { address: string }) {
         </ol>
         {rest.length > 0 && (
           <details className="group border-t border-rule">
-            <summary className="flex min-h-11 cursor-pointer list-none items-center font-mono text-[0.875rem] font-bold text-ochre underline underline-offset-4 [&::-webkit-details-marker]:hidden">
-              <span className="group-open:hidden">Show {rest.length} smaller lines</span>
-              <span className="hidden group-open:inline">Hide {rest.length} smaller lines</span>
+            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-2 [&::-webkit-details-marker]:hidden">
+              <span className="font-mono text-[0.875rem] font-bold text-ochre underline underline-offset-4">
+                {rest.length} smaller {rest.length === 1 ? "line" : "lines"} under {usd(DUST_USD, 0)}
+              </span>
+              <span className="fig text-[0.9375rem] font-bold">{usd(restTotal)}</span>
             </summary>
             <ol className="divide-y divide-rule">
               {rest.map((h, i) => (
@@ -112,6 +117,7 @@ export async function StatementView({ address }: { address: string }) {
             </ol>
           </details>
         )}
+        </div>
 
       </div>
     </article>
@@ -154,7 +160,10 @@ function Line({ h, i, address, stub }: { h: HoldingLine; i: number; address: str
       </div>
       <p className="mt-3 max-w-[52ch] text-[0.9375rem] text-ink-2">{sentence(h)}</p>
       <p className="fig mt-2 text-[0.75rem] text-ink-3">Pay period: {period(h)}</p>
-      {h.status === "earning" && h.payoutTokens > 0 && (
+      {h.status === "earning" && h.payoutTokens > 0 && h.accruedUsd < MIN_CASHOUT_USD && (
+        <p className="mt-4 text-[0.875rem] text-ink-3">Below the {usd(MIN_CASHOUT_USD, 0)} minimum. It keeps accruing.</p>
+      )}
+      {h.status === "earning" && h.payoutTokens > 0 && h.accruedUsd >= MIN_CASHOUT_USD && (
         <CashOut address={address} symbol={h.symbol} sellTokens={h.payoutTokens} stub={stub} accruedUsd={h.accruedUsd} accruedShares={h.accruedShares} multiplier={h.multiplier} />
       )}
     </li>
