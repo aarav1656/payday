@@ -151,7 +151,9 @@ function Line({ h, i, address, stub }: { h: HoldingLine; i: number; address: str
       </div>
       <p className="mt-3 max-w-[52ch] text-[0.9375rem] text-ink-2">{sentence(h)}</p>
       <p className="fig mt-2 text-[0.75rem] text-ink-3">Pay period: {period(h)}</p>
-      {h.status === "earning" && h.payoutTokens > 0 && <CashOut address={address} symbol={h.symbol} sellTokens={h.payoutTokens} stub={stub} />}
+      {h.status === "earning" && h.payoutTokens > 0 && (
+        <CashOut address={address} symbol={h.symbol} sellTokens={h.payoutTokens} stub={stub} accruedUsd={h.accruedUsd} accruedShares={h.accruedShares} multiplier={h.multiplier} />
+      )}
     </li>
   );
 }

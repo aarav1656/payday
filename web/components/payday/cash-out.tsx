@@ -2,13 +2,21 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { refuseCashOut } from "@/lib/cashout-rules";
 import { tokens, utcTime } from "@/lib/shared/format";
 import type { CashOutQuote } from "@/lib/payday";
 import { Note } from "./bits";
+import { WalletSign, type Settle } from "./wallet-sign";
 
 type State = { kind: "idle" } | { kind: "loading" } | { kind: "error"; message: string } | { kind: "done"; quote: CashOutQuote };
 
-export function CashOut({ address, symbol, sellTokens, stub }: { address: string; symbol: string; sellTokens: number; stub: string }) {
+/** "Mon 12 Oct, 15:30" in the reader's own time zone. */
+const localTime = (ms: number) =>
+  new Date(ms).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hour12: false });
+
+export function CashOut({
+  address, symbol, sellTokens, stub, accruedUsd, accruedShares, multiplier,
+}: { address: string; symbol: string; sellTokens: number; stub: string; accruedUsd: number; accruedShares: number; multiplier: number }) {
   const [state, setState] = useState<State>({ kind: "idle" });
 
   async function run() {
@@ -31,30 +39,43 @@ export function CashOut({ address, symbol, sellTokens, stub }: { address: string
     <div className="mt-5">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <Button onClick={run} disabled={state.kind === "loading"} size="sm" aria-describedby={`dry-${symbol}`}>
-          {state.kind === "loading" ? "Writing the cheque" : state.kind === "done" ? "Cash again" : "Cash this cheque"}
+          {state.kind === "loading"
+            ? "Writing the cheque"
+            : state.kind === "done" && state.quote.blocked
+              ? state.quote.market.nextOpenTime
+                ? `Ask again at ${localTime(state.quote.market.nextOpenTime)}`
+                : "Ask again later"
+              : state.kind === "done"
+                ? "Cash again"
+                : "Cash this cheque"}
         </Button>
         <span id={`dry-${symbol}`} className="text-[0.8125rem] text-ink-3">
-          Sells only the {tokens(sellTokens)} {symbol} that carry the dividend. Dry run, nothing is signed.
+          Sells only the {tokens(sellTokens)} {symbol} tokens that carry the dividend.
+          {tokens(sellTokens) !== tokens(accruedShares) &&
+            ` The ${tokens(accruedShares)} shares earned are a bit more than that, because each token stands for ${multiplier.toFixed(5)} shares.`}{" "}
+          Nothing is signed until you confirm in your wallet.
         </span>
       </div>
       <div aria-live="polite" className="mt-5 empty:hidden">
         {state.kind === "error" && <Note tone="stop">{state.message}</Note>}
-        {state.kind === "done" && <Cheque q={state.quote} address={address} stub={stub} />}
+        {state.kind === "done" && <Cheque q={state.quote} address={address} stub={stub} symbol={symbol} accruedUsd={accruedUsd} />}
       </div>
     </div>
   );
 }
 
 /** The dry-run quote printed as a cheque. A refused quote prints VOID with the reason Binance gave. */
-export function Cheque({ q, address, stub }: { q: CashOutQuote; address: string; stub: string }) {
+export function Cheque({ q, address, stub, symbol, accruedUsd }: { q: CashOutQuote; address: string; stub: string; symbol: string; accruedUsd: number }) {
+  const [settle, setSettle] = useState<Settle>({ kind: "none" });
   const short = `${address.slice(0, 6)}…${address.slice(-4)}`;
   const void_ = q.blocked !== null;
   const sim = q.simulation;
+  const refusal = void_ ? null : refuseCashOut({ statementAddress: address, connected: address, notionalUsd: Math.max(accruedUsd, q.expectUsdt ?? 0) });
   return (
     <figure className="cheque relative grid overflow-hidden md:grid-cols-[minmax(0,1fr)_11rem]" aria-label={void_ ? "Void cheque" : "Cheque"}>
       <div className="p-5 md:p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-          <p className="label">Payday cheque · dry run</p>
+          <p className="label">Payday cheque · quote</p>
           <p className="fig text-[0.8125rem] text-ink-2">No. {stub} · {utcTime(q.at)} UTC</p>
         </div>
 
@@ -96,7 +117,31 @@ export function Cheque({ q, address, stub }: { q: CashOutQuote; address: string;
                 {sim.detail}
               </span>
             </p>
-            <p className="mt-2 font-serif text-[1rem] text-ink-3">Not signed. Sign it in your own wallet.</p>
+            {refusal ? (
+              <div className="mt-3">
+                <Note tone="stop">{refusal}</Note>
+              </div>
+            ) : (
+              <>
+                <WalletSign address={address} symbol={symbol} onSettle={setSettle} disabled={settle.kind === "done" || sim.ok === false} />
+                <div aria-live="polite" className="mt-3 empty:hidden">
+                  {settle.kind === "working" && <Note tone="plain">{settle.text}</Note>}
+                  {settle.kind === "failed" && <Note tone="stop">{settle.message}</Note>}
+                  {settle.kind === "done" && (
+                    <Note tone="ok">
+                      Paid. {settle.orderId ? `Order ${settle.orderId} filled. ` : ""}
+                      {settle.txHash ? (
+                        <a className="fig break-all font-bold underline underline-offset-4" href={`https://bscscan.com/tx/${settle.txHash}`} target="_blank" rel="noreferrer">
+                          {settle.txHash.slice(0, 10)}…{settle.txHash.slice(-6)} on BscScan
+                        </a>
+                      ) : (
+                        "Binance has not published the transaction hash yet."
+                      )}
+                    </Note>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -116,7 +161,7 @@ export function Cheque({ q, address, stub }: { q: CashOutQuote; address: string;
         </div>
         <div>
           <dt className="label">Signed</dt>
-          <dd>no</dd>
+          <dd>{settle.kind === "done" ? "yes" : settle.kind === "working" ? "in progress" : "no"}</dd>
         </div>
       </dl>
     </figure>

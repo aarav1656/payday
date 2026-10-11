@@ -30,7 +30,7 @@ const NOTES = [
   },
   {
     term: "What cash-out does",
-    text: "It asks the Binance Web3 API for a quote and simulates the approval. The page holds no key that can sign, so the order is always signed in your own wallet.",
+    text: "It asks the Binance Web3 API for a quote, simulates the transactions for your address, and hands them to your own wallet. The page holds no key that can sign.",
   },
 ];
 
