@@ -34,7 +34,7 @@ payoutTokens  = tokens x (1 - baseline / multiplier)
 
 Paste any BNB Chain address into the payslip page. Reading needs no wallet.
 
-- **Stub.** The payslip number, the address, the block the balances were read at, and net pay in dollars.
+- **Header.** The payslip number, the address, the block the balances were read at, and net pay in dollars.
 - **Earnings.** One line per Ondo token held: tokens, shares gained since launch, price per share, dollars earned. Lines under $1 fold into a single row.
 - **Certificate.** Each token drawn as the share certificate it behaves like, with the dividend sliver at the end of the bar.
 - **Cheque.** A live quote for selling the dividend portion into USDT: vendor, expected USDT, price impact, simulation result, market state.
@@ -44,11 +44,13 @@ Paste any BNB Chain address into the payslip page. Reading needs no wallet.
 
 ![Payday architecture](docs/architecture/architecture.png)
 
-The payslip is a Next.js app on Vercel (region `bom1`). `/api/statement` assembles the statement from the Binance RWA endpoints and BNB Chain balances. `/api/cashout` prices the cheque, and `/api/cashout/build`, `/submit` and `/status` walk the cash-out one step at a time. The same `src/` modules also drive a CLI, `bin/payday.ts`, which signs through the Binance Agentic Wallet.
+The interactive version is `docs/architecture/architecture.html`, with SVG and PNG exports beside it. The payslip is a Next.js app on Vercel (region `bom1`). `/api/statement` assembles the statement from the Binance RWA endpoints and BNB Chain balances. `/api/cashout` prices the cheque, and `/api/cashout/build`, `/submit` and `/status` walk the cash-out one step at a time. The same `src/` modules also drive a CLI, `bin/payday.ts`, which signs through the Binance Agentic Wallet.
 
 ### From dividend to payout
 
 ![Dividend to payout data flow](docs/architecture/dividend-to-payout.png)
+
+Interactive: `docs/architecture/dividend-to-payout.html`.
 
 1. **Ondo folds the dividend into the multiplier.** The token list and the dynamic price endpoint publish it as `multiplier` and `tokenInfo.sharesMultiplier`. Payday reads the dynamic one, which moves with dividends.
 2. **Accrual.** `src/dividends/accrual.ts` computes accrued shares and dollars, and `payoutTokens`.
@@ -116,7 +118,7 @@ Web app:
 cd web && npm install && npm run dev
 ```
 
-Open http://localhost:3000 and paste an address.
+The page opens on port 3000. Paste an address to print its payslip.
 
 CLI:
 
