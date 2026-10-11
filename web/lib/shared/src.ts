@@ -14,3 +14,4 @@ export const web3api = () => load("exec/web3api.ts") as Promise<typeof import(".
 export const multiplierMod = () => load("dividends/multiplier.ts") as Promise<typeof import("../../../src/dividends/multiplier.ts")>;
 export const accrualMod = () => load("dividends/accrual.ts") as Promise<typeof import("../../../src/dividends/accrual.ts")>;
 export const statementMod = () => load("dividends/statement.ts") as Promise<typeof import("../../../src/dividends/statement.ts")>;
+export const executeMod = () => load("exec/execute.ts") as Promise<typeof import("../../../src/exec/execute.ts")>;
