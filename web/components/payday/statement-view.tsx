@@ -20,6 +20,7 @@ export async function StatementView({ address }: { address: string }) {
 
   const stub = stubNumber(st.address);
   const payTo = getAddress(st.address);
+  const lineCount = `${st.holdings.length} ${st.holdings.length === 1 ? "line" : "lines"}`;
   const header = (
     <header>
       <div className="flex items-baseline justify-between gap-4">
@@ -36,6 +37,13 @@ export async function StatementView({ address }: { address: string }) {
           <dd className="break-all font-bold">{payTo}</dd>
         </div>
       </dl>
+      <div className="mt-7 border-t-2 border-ink pt-5">
+        <p className="label text-ink">Net pay, not yet cashed</p>
+        <p className="amount mt-1 text-[3.5rem] font-medium leading-none md:text-[4rem]">{usd(st.totalUsd)}</p>
+        <p className="mt-3 text-[0.8125rem] text-ink-3">
+          At today&apos;s stock prices{st.holdings.length > 0 ? `, across ${lineCount}` : ""}.
+        </p>
+      </div>
     </header>
   );
 
@@ -105,11 +113,6 @@ export async function StatementView({ address }: { address: string }) {
           </details>
         )}
 
-        <div className="total-rule mt-2 flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1 border-t-2 border-ink py-5">
-          <p className="label text-ink">Net pay, not yet cashed</p>
-          <p className="amount text-[2.5rem] font-medium leading-none md:text-[3rem]">{usd(st.totalUsd)}</p>
-        </div>
-        <p className="mt-3 text-[0.8125rem] text-ink-3">At today&apos;s stock prices, across {st.holdings.length} {st.holdings.length === 1 ? "line" : "lines"}.</p>
       </div>
     </article>
   );
