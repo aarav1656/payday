@@ -1,0 +1,166 @@
+import Link from "next/link";
+import { getAddress } from "viem";
+import { BadAddress, buildStatement, EXAMPLE_ADDRESS, stubNumber, type HoldingLine } from "@/lib/payday";
+import { tokens, usd, utcTime } from "@/lib/shared/format";
+import { Note } from "./bits";
+import { Certificate } from "./certificate";
+import { CashOut } from "./cash-out";
+
+const VISIBLE_LINES = 6;
+
+export async function StatementView({ address }: { address: string }) {
+  let st;
+  try {
+    st = await buildStatement(address);
+  } catch (e) {
+    if (e instanceof BadAddress) return <Note tone="stop">{e.message}</Note>;
+    console.error("statement", e);
+    return <Note tone="stop">The chain or Binance&apos;s token list did not answer. Reload in a moment; nothing was changed.</Note>;
+  }
+
+  const stub = stubNumber(st.address);
+  const payTo = getAddress(st.address);
+  const header = (
+    <header>
+      <div className="flex items-baseline justify-between gap-4">
+        <p className="font-serif text-[1.75rem] font-medium leading-none">Payday</p>
+        <p className="label">Earnings statement</p>
+      </div>
+      <dl className="fig mt-6 grid grid-cols-2 gap-x-6 gap-y-3 text-[0.875rem]">
+        <Field term="Stub no." value={stub} />
+        <Field term="Advice date" value={`${utcTime(st.asOf)} UTC`} />
+        <Field term="Block" value={st.block.toLocaleString("en-US")} />
+        <Field term="Tokens checked" value={`${st.scanned} Ondo`} />
+        <div className="col-span-2">
+          <dt className="label">Pay to</dt>
+          <dd className="break-all font-bold">{payTo}</dd>
+        </div>
+      </dl>
+    </header>
+  );
+
+  if (st.holdings.length === 0) {
+    return (
+      <article className="sheet-wrap" aria-labelledby="empty">
+        <div className="sheet px-6 py-10 md:px-9">
+          {header}
+          <div className="mt-8 border-t border-ink pt-8">
+            <h2 id="empty" className="max-w-[20ch] text-[2rem] font-normal leading-tight">
+              Nothing was paid to this address.
+            </h2>
+            <p className="mt-3 max-w-[52ch] text-ink-2">
+              Payday checked all {st.scanned} Ondo tokens on BNB Chain and this address holds none of them. Dividends accrue only to Ondo
+              tokens, whose symbols end in <span className="fig">on</span>, like <span className="fig">KOon</span>. Paste the address
+              that holds yours, or open a live payslip to see how one reads.
+            </p>
+            <Link href={`/?address=${EXAMPLE_ADDRESS}`} className="mt-3 inline-flex min-h-11 items-center font-bold text-ochre underline underline-offset-4">
+              Open the FXIon pool&apos;s payslip
+            </Link>
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  const top = st.holdings[0];
+  const shown = st.holdings.slice(0, VISIBLE_LINES);
+  const rest = st.holdings.slice(VISIBLE_LINES);
+
+  return (
+    <article className="sheet-wrap" aria-labelledby="stmt">
+      <div className="sheet px-6 py-10 md:px-9">
+        {header}
+        <h2 id="stmt" className="sr-only">Earnings</h2>
+
+        {top.status === "earning" && (
+          <div className="mt-8">
+            <Certificate company={top.company} symbol={top.symbol} ticker={top.ticker} multiplier={top.multiplier} baseline={top.baseline} />
+          </div>
+        )}
+
+        <div className="mt-8 hidden border-b border-ink pb-2 md:grid md:grid-cols-[minmax(0,1fr)_6.5rem_5.5rem_6.5rem] md:gap-x-4">
+          <p className="label">Employer</p>
+          <p className="label text-right">Shares earned</p>
+          <p className="label text-right">Rate</p>
+          <p className="label text-right">Amount</p>
+        </div>
+        <p className="label mt-8 border-b border-ink pb-2 md:hidden">Earnings</p>
+
+        <ol className="divide-y divide-rule">
+          {shown.map((h, i) => (
+            <Line key={h.address} h={h} i={i} address={payTo} stub={stub} />
+          ))}
+        </ol>
+        {rest.length > 0 && (
+          <details className="group border-t border-rule">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center font-mono text-[0.875rem] font-bold text-ochre underline underline-offset-4 [&::-webkit-details-marker]:hidden">
+              <span className="group-open:hidden">Show {rest.length} smaller lines</span>
+              <span className="hidden group-open:inline">Hide {rest.length} smaller lines</span>
+            </summary>
+            <ol className="divide-y divide-rule">
+              {rest.map((h, i) => (
+                <Line key={h.address} h={h} i={i} address={payTo} stub={stub} />
+              ))}
+            </ol>
+          </details>
+        )}
+
+        <div className="total-rule mt-2 flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1 border-t-2 border-ink py-5">
+          <p className="label text-ink">Net pay, not yet cashed</p>
+          <p className="amount text-[2.5rem] font-medium leading-none md:text-[3rem]">{usd(st.totalUsd)}</p>
+        </div>
+        <p className="mt-3 text-[0.8125rem] text-ink-3">At today&apos;s stock prices, across {st.holdings.length} {st.holdings.length === 1 ? "line" : "lines"}.</p>
+      </div>
+    </article>
+  );
+}
+
+function Field({ term, value }: { term: string; value: string }) {
+  return (
+    <div>
+      <dt className="label">{term}</dt>
+      <dd className="font-bold">{value}</dd>
+    </div>
+  );
+}
+
+function period(h: HoldingLine) {
+  const from = h.baselineSource === "launch" ? `launch rate ${h.baseline.toFixed(5)}` : `${h.baseline.toFixed(5)} first recorded ${utcTime(h.baselineAt ?? 0)} UTC`;
+  return `${from} to live rate ${h.multiplier.toFixed(5)}`;
+}
+
+function sentence(h: HoldingLine) {
+  if (h.status !== "earning") return h.sentence;
+  const who = h.company ?? h.ticker;
+  return `${tokens(h.tokens)} ${h.symbol} now stand for ${tokens(h.tokens * h.multiplier)} shares of ${who}. ${tokens(h.accruedShares)} of those shares arrived as dividends over the pay period, worth ${usd(h.accruedUsd)} at ${h.stockUsd === null ? "today's price" : usd(h.stockUsd) + " a share"}.`;
+}
+
+function Line({ h, i, address, stub }: { h: HoldingLine; i: number; address: string; stub: string }) {
+  return (
+    <li className="rise py-6" style={{ ["--i" as string]: i }}>
+      <div className="md:grid md:grid-cols-[minmax(0,1fr)_6.5rem_5.5rem_6.5rem] md:items-baseline md:gap-x-4">
+        <div>
+          <p className="font-serif text-[1.25rem] font-medium leading-tight">{h.company ?? h.ticker}</p>
+          <p className="fig mt-1 text-[0.8125rem] text-ink-3">
+            {h.symbol} · {tokens(h.tokens)} held
+          </p>
+        </div>
+        <Cell term="Shares earned" value={tokens(h.accruedShares)} />
+        <Cell term="Rate" value={h.stockUsd === null ? "n/a" : usd(h.stockUsd)} />
+        <Cell term="Amount" value={usd(h.accruedUsd)} strong />
+      </div>
+      <p className="mt-3 max-w-[52ch] text-[0.9375rem] text-ink-2">{sentence(h)}</p>
+      <p className="fig mt-2 text-[0.75rem] text-ink-3">Pay period: {period(h)}</p>
+      {h.status === "earning" && h.payoutTokens > 0 && <CashOut address={address} symbol={h.symbol} sellTokens={h.payoutTokens} stub={stub} />}
+    </li>
+  );
+}
+
+function Cell({ term, value, strong = false }: { term: string; value: string; strong?: boolean }) {
+  return (
+    <div className="leader mt-2 md:mt-0 md:block md:text-right md:before:hidden">
+      <span className="label md:hidden">{term}</span>
+      <span className={`fig text-[0.9375rem] ${strong ? "font-bold" : ""}`}>{value}</span>
+    </div>
+  );
+}
