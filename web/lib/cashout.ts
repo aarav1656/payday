@@ -68,7 +68,7 @@ export async function buildCashOut(statementRaw: string, connectedRaw: string, s
 
   const { listVersions, sessionStatus } = await rwa();
   const { Web3ApiError, simulateFailure } = await web3api();
-  const { pickRoute, typedDataJson, toUnits } = await executeMod();
+  const { pickRoute, typedDataJson } = await executeMod();
   const version = (await listVersions(line.ticker)).find((v) => v.address === line.address);
   if (!version) throw new CashOutRefused(`${symbol} disappeared from the Binance list.`);
   const market = await sessionStatus(version);

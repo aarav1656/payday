@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { carryingDividends, EXAMPLE_ADDRESS } from "@/lib/payday";
+import { moreShares } from "@/lib/shared/format";
 import { Note } from "./bits";
 import { Certificate } from "./certificate";
 
@@ -22,7 +23,7 @@ export async function IdleView() {
       </p>
       {top && (
         <div className="mt-6 max-w-[40rem]">
-          <Certificate company={top.company} symbol={top.symbol} ticker={top.ticker} multiplier={top.multiplier} baseline={1} stockUsd={data.topStockUsd} />
+          <Certificate company={top.company} symbol={top.symbol} ticker={top.ticker} multiplier={top.multiplier} baseline={1} stockUsd={data.topStockUsd} since="launch" />
         </div>
       )}
       <table className="mt-8 w-full max-w-[40rem] border-y border-rule-strong text-left">
@@ -30,7 +31,7 @@ export async function IdleView() {
         <thead>
           <tr className="label border-b border-rule-strong">
             <th scope="col" className="py-2.5 font-bold">Employer</th>
-            <th scope="col" className="py-2.5 text-right font-bold">Share rate</th>
+            <th scope="col" className="py-2.5 text-right font-bold">More shares since launch</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-rule">
@@ -40,7 +41,7 @@ export async function IdleView() {
                 <span className="font-serif text-[1.0625rem] font-medium">{r.company ?? r.ticker}</span>
                 <span className="fig ml-2 text-[0.8125rem] text-ink-3">{r.symbol}</span>
               </th>
-              <td className="fig py-3 text-right">{r.multiplier.toFixed(5)}</td>
+              <td className="fig py-3 text-right">{moreShares(r.multiplier, 1)}</td>
             </tr>
           ))}
         </tbody>

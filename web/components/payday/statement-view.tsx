@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getAddress } from "viem";
 import { BadAddress, buildStatement, EXAMPLE_ADDRESS, stubNumber, type HoldingLine } from "@/lib/payday";
 import { MIN_CASHOUT_USD } from "@/lib/cashout-rules";
-import { tokens, usd, utcTime } from "@/lib/shared/format";
+import { tokens, usd, utcDate, utcTime } from "@/lib/shared/format";
 import { Note } from "./bits";
 import { Certificate } from "./certificate";
 import { CashOut } from "./cash-out";
@@ -84,14 +84,14 @@ export async function StatementView({ address }: { address: string }) {
 
         {top.status === "earning" && (
           <div className="mt-8">
-            <Certificate company={top.company} symbol={top.symbol} ticker={top.ticker} multiplier={top.multiplier} baseline={top.baseline} stockUsd={top.stockUsd} />
+            <Certificate company={top.company} symbol={top.symbol} ticker={top.ticker} multiplier={top.multiplier} baseline={top.baseline} stockUsd={top.stockUsd} since={sinceOf(top)} />
           </div>
         )}
 
-        <div className="mt-8 hidden border-b border-ink pb-2 md:grid md:grid-cols-[minmax(0,1fr)_6.5rem_5.5rem_6.5rem] md:gap-x-4">
+        <div className="mt-8 hidden border-b border-ink pb-2 md:grid md:grid-cols-[minmax(0,1fr)_6.5rem_6.5rem_6.5rem] md:gap-x-4">
           <p className="label">Employer</p>
           <p className="label text-right">Shares earned</p>
-          <p className="label text-right">Rate</p>
+          <p className="label text-right">Price per share</p>
           <p className="label text-right">Amount</p>
         </div>
         <p className="label mt-8 border-b border-ink pb-2 md:hidden">Earnings</p>
@@ -99,7 +99,7 @@ export async function StatementView({ address }: { address: string }) {
         <div className="border-b-2 border-ink">
         <ol className="divide-y divide-rule">
           {shown.map((h, i) => (
-            <Line key={h.address} h={h} i={i} address={payTo} stub={stub} />
+            <Line key={h.address} h={h} i={i} address={payTo} stub={stub} asOf={st.asOf} />
           ))}
         </ol>
         {rest.length > 0 && (
@@ -112,7 +112,7 @@ export async function StatementView({ address }: { address: string }) {
             </summary>
             <ol className="divide-y divide-rule">
               {rest.map((h, i) => (
-                <Line key={h.address} h={h} i={i} address={payTo} stub={stub} />
+                <Line key={h.address} h={h} i={i} address={payTo} stub={stub} asOf={st.asOf} />
               ))}
             </ol>
           </details>
@@ -133,9 +133,10 @@ function Field({ term, value }: { term: string; value: string }) {
   );
 }
 
-function period(h: HoldingLine) {
-  const from = h.baselineSource === "launch" ? `launch rate ${h.baseline.toFixed(5)}` : `${h.baseline.toFixed(5)} first recorded ${utcTime(h.baselineAt ?? 0)} UTC`;
-  return `${from} to live rate ${h.multiplier.toFixed(5)}`;
+const sinceOf = (h: HoldingLine) => (h.baselineSource === "launch" || h.baselineAt === null ? "launch" : utcDate(h.baselineAt));
+
+function period(h: HoldingLine, asOf: number) {
+  return `${sinceOf(h) === "launch" ? "launch" : sinceOf(h)} to ${utcDate(asOf)}`;
 }
 
 function sentence(h: HoldingLine) {
@@ -144,10 +145,10 @@ function sentence(h: HoldingLine) {
   return `${tokens(h.tokens)} ${h.symbol} now stand for ${tokens(h.tokens * h.multiplier)} shares of ${who}. ${tokens(h.accruedShares)} of those shares arrived as dividends over the pay period, worth ${usd(h.accruedUsd)} at ${h.stockUsd === null ? "today's price" : usd(h.stockUsd) + " a share"}.`;
 }
 
-function Line({ h, i, address, stub }: { h: HoldingLine; i: number; address: string; stub: string }) {
+function Line({ h, i, address, stub, asOf }: { h: HoldingLine; i: number; address: string; stub: string; asOf: number }) {
   return (
     <li className="rise py-6" style={{ ["--i" as string]: i }}>
-      <div className="md:grid md:grid-cols-[minmax(0,1fr)_6.5rem_5.5rem_6.5rem] md:items-baseline md:gap-x-4">
+      <div className="md:grid md:grid-cols-[minmax(0,1fr)_6.5rem_6.5rem_6.5rem] md:items-baseline md:gap-x-4">
         <div>
           <p className="font-serif text-[1.25rem] font-medium leading-tight">{h.company ?? h.ticker}</p>
           <p className="fig mt-1 text-[0.8125rem] text-ink-3">
@@ -155,11 +156,11 @@ function Line({ h, i, address, stub }: { h: HoldingLine; i: number; address: str
           </p>
         </div>
         <Cell term="Shares earned" value={tokens(h.accruedShares)} />
-        <Cell term="Rate" value={h.stockUsd === null ? "n/a" : usd(h.stockUsd)} />
+        <Cell term="Price per share" value={h.stockUsd === null ? "n/a" : usd(h.stockUsd)} />
         <Cell term="Amount" value={usd(h.accruedUsd)} strong />
       </div>
       <p className="mt-3 max-w-[52ch] text-[0.9375rem] text-ink-2">{sentence(h)}</p>
-      <p className="fig mt-2 text-[0.75rem] text-ink-3">Pay period: {period(h)}</p>
+      <p className="fig mt-2 text-[0.75rem] text-ink-3">Pay period: {period(h, asOf)}</p>
       {h.status === "earning" && h.payoutTokens > 0 && h.accruedUsd < MIN_CASHOUT_USD && (
         <p className="mt-4 text-[0.875rem] text-ink-3">Below the {usd(MIN_CASHOUT_USD, 0)} minimum. It keeps accruing.</p>
       )}

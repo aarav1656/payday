@@ -1,4 +1,4 @@
-import { tokens, usd } from "@/lib/shared/format";
+import { moreShares, tokens, usd } from "@/lib/shared/format";
 
 /** Round seal: 36 ticks and the ticker. Generated, not drawn. */
 function Seal({ ticker }: { ticker: string }) {
@@ -30,6 +30,7 @@ export function Certificate({
   multiplier,
   baseline,
   stockUsd,
+  since,
 }: {
   company: string | null;
   symbol: string;
@@ -38,6 +39,8 @@ export function Certificate({
   baseline: number;
   /** Price of one share, so the sliver can be labelled in dollars. Null leaves the dollar label off. */
   stockUsd: number | null;
+  /** "launch" or the date the baseline rate was first recorded. */
+  since: string;
 }) {
   const sliver = multiplier - baseline;
   const baseShare = (baseline / multiplier) * 100;
@@ -52,6 +55,7 @@ export function Certificate({
           <p className="mt-3 text-[0.9375rem] text-ink-2">One {symbol} token stands for</p>
           <p className="amount mt-1 text-[2.75rem] font-normal leading-none tracking-[-0.02em] md:text-[3.5rem]">{multiplier.toFixed(5)}</p>
           <p className="mt-2 font-serif text-[1.125rem] leading-snug md:text-[1.25rem]">shares of {company ?? ticker}</p>
+          <p className="fig mt-2 text-[0.875rem] font-bold text-ochre">{moreShares(multiplier, baseline)} more shares since {since}</p>
         </div>
         <Seal ticker={ticker} />
       </div>

@@ -63,8 +63,9 @@ async function companyNames(addresses: Address[]): Promise<Map<Address, string |
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const name = (await res.json())?.data?.companyInfo?.companyName;
         if (typeof name !== "string" || !name) throw new Error("no companyName in metadata");
-        companyCache.set(a, name);
-        out.set(a, name);
+        const clean = name.trim().replace(/\.+$/, ""); // "Inc." would print as "Inc.." at the end of a sentence
+        companyCache.set(a, clean);
+        out.set(a, clean);
       } catch (e) {
         console.error("company name", a, e instanceof Error ? e.message : e);
         out.set(a, null);
