@@ -8,18 +8,24 @@ export function Header() {
         <Link href="/" className="inline-flex min-h-14 items-center font-serif text-[1.625rem] font-medium leading-none tracking-[-0.01em]">
           {PAYDAY_NAME}
         </Link>
+        <div className="flex items-center gap-5">
+        <span className="fig hidden items-center gap-2 rounded-full border border-rule-strong px-3 py-1 text-[0.75rem] text-ink-2 sm:inline-flex">
+          <span aria-hidden className="size-1.5 rounded-full bg-ok" />
+          BNB Chain, read live
+        </span>
         <Link
           href={`/?address=${EXAMPLE_ADDRESS}`}
           className="inline-flex min-h-14 items-center whitespace-nowrap font-mono text-[0.875rem] font-bold text-ochre underline decoration-1 underline-offset-4 hover:decoration-2"
         >
           Read a sample
         </Link>
+        </div>
       </div>
     </header>
   );
 }
 
-const NOTES = [
+export const NOTES = [
   {
     term: "How a dividend is counted",
     text: "An Ondo token grows the number of shares it stands for. Tokens held, times the growth since the baseline rate, priced at the stock's current price.",
@@ -41,14 +47,6 @@ export function Footer() {
         <p className="max-w-[34ch] font-serif text-[1.5rem] font-normal leading-snug">
           The dividend was always yours. Now it has a line on the page.
         </p>
-        <dl className="mt-10 grid gap-x-12 gap-y-6 text-[0.875rem] leading-relaxed text-ink-2 md:grid-cols-3">
-          {NOTES.map((n) => (
-            <div key={n.term}>
-              <dt className="label mb-1.5">{n.term}</dt>
-              <dd>{n.text}</dd>
-            </div>
-          ))}
-        </dl>
       </div>
     </footer>
   );

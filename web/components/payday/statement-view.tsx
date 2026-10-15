@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getAddress } from "viem";
-import { BadAddress, buildStatement, EXAMPLE_ADDRESS, slipNumber, type HoldingLine } from "@/lib/payday";
+import { BadAddress, buildStatement, EXAMPLE_ADDRESS, type HoldingLine } from "@/lib/payday";
 import { MIN_CASHOUT_USD } from "@/lib/cashout-rules";
 import { tokens, usd, utcDate, utcTime } from "@/lib/shared/format";
 import { Note } from "./bits";
@@ -19,7 +19,6 @@ export async function StatementView({ address }: { address: string }) {
     return <Note tone="stop">The chain or Binance&apos;s token list did not answer. Reload in a moment; nothing was changed.</Note>;
   }
 
-  const slipNo = slipNumber(st.address);
   const payTo = getAddress(st.address);
   const lineCount = `${st.holdings.length} ${st.holdings.length === 1 ? "line" : "lines"}`;
   const header = (
@@ -29,17 +28,20 @@ export async function StatementView({ address }: { address: string }) {
         <p className="label">Earnings statement</p>
       </div>
       <dl className="fig mt-6 grid grid-cols-2 gap-x-6 gap-y-3 text-[0.875rem]">
-        <Field term="Stub no." value={slipNo} />
-        <Field term="Advice date" value={`${utcTime(st.asOf)} UTC`} />
+        <Field term="Read at" value={`${utcTime(st.asOf)} UTC`} />
         <Field term="Block" value={st.block.toLocaleString("en-US")} />
         <Field term="Tokens checked" value={`${st.scanned} Ondo`} />
-        <div className="col-span-2">
-          <dt className="label">Pay to</dt>
-          <dd className="break-all font-bold">{payTo}</dd>
+        <div>
+          <dt className="label">Address</dt>
+          <dd>
+            <a href={`https://bscscan.com/address/${payTo}`} target="_blank" rel="noreferrer" title={payTo} className="font-bold underline decoration-rule-strong underline-offset-4 hover:decoration-ink">
+              {payTo.slice(0, 6)}…{payTo.slice(-4)}
+            </a>
+          </dd>
         </div>
       </dl>
       <div className="mt-7 border-t-2 border-ink pt-5">
-        <p className="label text-ink">Net pay, not yet cashed</p>
+        <p className="label text-ink">Dividends earned, not yet cashed</p>
         <p className="amount mt-1 text-[3.5rem] font-medium leading-none md:text-[4rem]">{usd(st.totalUsd)}</p>
         <p className="mt-3 text-[0.8125rem] text-ink-3">
           At today&apos;s stock prices{st.holdings.length > 0 ? `, across ${lineCount}` : ""}.
@@ -50,8 +52,8 @@ export async function StatementView({ address }: { address: string }) {
 
   if (st.holdings.length === 0) {
     return (
-      <article className="sheet-wrap" aria-labelledby="empty">
-        <div className="sheet px-6 py-10 md:px-9">
+      <article className="panel" aria-labelledby="empty">
+        <div className="px-6 py-8 md:px-9">
           {header}
           <div className="mt-8 border-t border-ink pt-8">
             <h2 id="empty" className="max-w-[20ch] text-[2rem] font-normal leading-tight">
@@ -60,10 +62,10 @@ export async function StatementView({ address }: { address: string }) {
             <p className="mt-3 max-w-[52ch] text-ink-2">
               Payday checked all {st.scanned} Ondo tokens on BNB Chain and this address holds none of them. Dividends accrue only to Ondo
               tokens, whose symbols end in <span className="fig">on</span>, like <span className="fig">KOon</span>. Paste the address
-              that holds yours, or open a live payslip to see how one reads.
+              that holds yours, or open a live statement to see how one reads.
             </p>
             <Link href={`/?address=${EXAMPLE_ADDRESS}`} className="mt-3 inline-flex min-h-11 items-center font-bold text-ochre underline underline-offset-4">
-              Open the FXIon pool&apos;s payslip
+              Open the FXIon pool&apos;s statement
             </Link>
           </div>
         </div>
@@ -77,8 +79,8 @@ export async function StatementView({ address }: { address: string }) {
   const restTotal = rest.reduce((sum, h) => sum + h.accruedUsd, 0);
 
   return (
-    <article className="sheet-wrap" aria-labelledby="stmt">
-      <div className="sheet px-6 py-10 md:px-9">
+    <article className="panel" aria-labelledby="stmt">
+      <div className="px-6 py-8 md:px-9">
         {header}
         <h2 id="stmt" className="sr-only">Earnings</h2>
 
@@ -88,18 +90,12 @@ export async function StatementView({ address }: { address: string }) {
           </div>
         )}
 
-        <div className="mt-8 hidden border-b border-ink pb-2 md:grid md:grid-cols-[minmax(0,1fr)_6.5rem_6.5rem_6.5rem] md:gap-x-4">
-          <p className="label">Employer</p>
-          <p className="label text-right">Shares earned</p>
-          <p className="label text-right">Price per share</p>
-          <p className="label text-right">Amount</p>
-        </div>
-        <p className="label mt-8 border-b border-ink pb-2 md:hidden">Earnings</p>
+<p className="label mt-8 border-b border-ink pb-2">Earnings</p>
 
         <div className="border-b-2 border-ink">
         <ol className="divide-y divide-rule">
-          {shown.map((h, i) => (
-            <Line key={h.address} h={h} i={i} address={payTo} slipNo={slipNo} asOf={st.asOf} />
+          {shown.map((h) => (
+            <Line key={h.address} h={h} address={payTo} asOf={st.asOf} />
           ))}
         </ol>
         {rest.length > 0 && (
@@ -111,8 +107,8 @@ export async function StatementView({ address }: { address: string }) {
               <span className="fig text-[0.9375rem] font-bold">{usd(restTotal)}</span>
             </summary>
             <ol className="divide-y divide-rule">
-              {rest.map((h, i) => (
-                <Line key={h.address} h={h} i={i} address={payTo} slipNo={slipNo} asOf={st.asOf} />
+              {rest.map((h) => (
+                <Line key={h.address} h={h} address={payTo} asOf={st.asOf} />
               ))}
             </ol>
           </details>
@@ -145,37 +141,50 @@ function sentence(h: HoldingLine) {
   return `${tokens(h.tokens)} ${h.symbol} now stand for ${tokens(h.tokens * h.multiplier)} shares of ${who}. ${tokens(h.accruedShares)} of those shares arrived as dividends over the pay period, worth ${usd(h.accruedUsd)} at ${h.stockUsd === null ? "today's price" : usd(h.stockUsd) + " a share"}.`;
 }
 
-function Line({ h, i, address, slipNo, asOf }: { h: HoldingLine; i: number; address: string; slipNo: string; asOf: number }) {
+function Line({ h, address, asOf }: { h: HoldingLine; address: string; asOf: number }) {
   return (
-    <li className="rise py-6" style={{ ["--i" as string]: i }}>
-      <div className="md:grid md:grid-cols-[minmax(0,1fr)_6.5rem_6.5rem_6.5rem] md:items-baseline md:gap-x-4">
-        <div>
-          <p className="font-serif text-[1.25rem] font-medium leading-tight">{h.company ?? h.ticker}</p>
-          <p className="fig mt-1 text-[0.8125rem] text-ink-3">
-            {h.symbol} · {tokens(h.tokens)} held
-          </p>
-        </div>
+    <li className="py-6">
+      <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="font-serif text-[1.25rem] font-medium leading-tight">{h.company ?? h.ticker}</span>
+        <StatusChip status={h.status} />
+      </p>
+      <p className="fig mt-1 text-[0.8125rem] text-ink-3">
+        {h.symbol} · {tokens(h.tokens)} held
+      </p>
+      <dl className="mt-4 grid grid-cols-3 gap-x-4">
         <Cell term="Shares earned" value={tokens(h.accruedShares)} />
         <Cell term="Price per share" value={h.stockUsd === null ? "n/a" : usd(h.stockUsd)} />
         <Cell term="Amount" value={usd(h.accruedUsd)} strong />
-      </div>
+      </dl>
       <p className="mt-3 max-w-[52ch] text-[0.9375rem] text-ink-2">{sentence(h)}</p>
       <p className="fig mt-2 text-[0.75rem] text-ink-3">Pay period: {period(h, asOf)}</p>
       {h.status === "earning" && h.payoutTokens > 0 && h.accruedUsd < MIN_CASHOUT_USD && (
         <p className="mt-4 text-[0.875rem] text-ink-3">Below the {usd(MIN_CASHOUT_USD, 0)} minimum. It keeps accruing.</p>
       )}
       {h.status === "earning" && h.payoutTokens > 0 && h.accruedUsd >= MIN_CASHOUT_USD && (
-        <CashOut address={address} symbol={h.symbol} sellTokens={h.payoutTokens} slipNo={slipNo} accruedUsd={h.accruedUsd} accruedShares={h.accruedShares} multiplier={h.multiplier} />
+        <CashOut address={address} symbol={h.symbol} sellTokens={h.payoutTokens} accruedUsd={h.accruedUsd} accruedShares={h.accruedShares} multiplier={h.multiplier} />
       )}
     </li>
   );
 }
 
+const CHIP: Record<HoldingLine["status"], { text: string; cls: string }> = {
+  earning: { text: "Earning", cls: "border-ok/60 text-ok" },
+  waiting: { text: "Waiting", cls: "border-rule-strong text-ink-3" },
+  adjusted: { text: "Adjusted", cls: "border-warn/60 text-warn" },
+  split: { text: "Split", cls: "border-warn/60 text-warn" },
+};
+
+function StatusChip({ status }: { status: HoldingLine["status"] }) {
+  const c = CHIP[status];
+  return <span className={`fig inline-flex h-6 items-center rounded-full border px-2.5 text-[0.6875rem] font-bold uppercase tracking-[0.08em] ${c.cls}`}>{c.text}</span>;
+}
+
 function Cell({ term, value, strong = false }: { term: string; value: string; strong?: boolean }) {
   return (
-    <div className="leader mt-2 md:mt-0 md:block md:text-right md:before:hidden">
-      <span className="label md:hidden">{term}</span>
-      <span className={`fig text-[0.9375rem] ${strong ? "font-bold" : ""}`}>{value}</span>
+    <div className={strong ? "text-right" : undefined}>
+      <dt className="label">{term}</dt>
+      <dd className={`fig mt-1 ${strong ? "amount text-[1.375rem] leading-none" : "text-[0.9375rem]"}`}>{value}</dd>
     </div>
   );
 }

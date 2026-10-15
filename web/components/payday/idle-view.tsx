@@ -30,8 +30,8 @@ export async function IdleView() {
         <caption className="sr-only">Ondo tokens with the highest share rate</caption>
         <thead>
           <tr className="label border-b border-rule-strong">
-            <th scope="col" className="py-2.5 font-bold">Employer</th>
-            <th scope="col" className="py-2.5 text-right font-bold">More shares since launch</th>
+            <th scope="col" className="py-2.5 font-bold">Asset</th>
+            <th scope="col" className="whitespace-nowrap py-2.5 text-right font-bold">Share growth</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-rule">
@@ -49,7 +49,7 @@ export async function IdleView() {
       <p className="mt-8 max-w-[56ch] text-ink-2">
         No address to hand?{" "}
         <Link href={`/?address=${EXAMPLE_ADDRESS}`} className="inline-flex min-h-11 items-center font-bold text-ochre underline underline-offset-4">
-          Open the FXIon pool&apos;s payslip
+          Open the FXIon pool&apos;s statement
         </Link>
         , a live address that holds Ondo tokens.
       </p>

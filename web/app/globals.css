@@ -1,4 +1,4 @@
-/* Hallmark · genre: editorial · macrostructure: Remittance slip (pay stub + share certificate + cheque) · theme: Atelier
+/* Hallmark · genre: editorial · macrostructure: Dividend statement (address desk + share certificate + cash-out quote) · theme: Atelier
  * nav: N9 edge-aligned · footer: Ft6 letter close
  * display: Young Serif · fields: Courier Prime · prose: Hanken Grotesk · accent: ochre ~3%
  */
@@ -151,19 +151,12 @@
   .leader > :last-child {
     order: 2;
   }
-  /* Paper lying on the desk, with a torn perforated top and bottom edge. */
-  .sheet-wrap {
-    filter: drop-shadow(0 1px 0 var(--rule-strong)) drop-shadow(0 12px 14px oklch(30% 0.05 70 / 0.14));
-  }
-  .sheet {
-    --p: 6px;
+  /* The statement and the quote sit on one raised panel each. */
+  .panel {
     background: var(--sheet);
-    -webkit-mask:
-      radial-gradient(circle var(--p) at 50% 0, #0000 97%, #000) top / calc(var(--p) * 3) 51% repeat-x,
-      radial-gradient(circle var(--p) at 50% 100%, #0000 97%, #000) bottom / calc(var(--p) * 3) 51% repeat-x;
-    mask:
-      radial-gradient(circle var(--p) at 50% 0, #0000 97%, #000) top / calc(var(--p) * 3) 51% repeat-x,
-      radial-gradient(circle var(--p) at 50% 100%, #0000 97%, #000) bottom / calc(var(--p) * 3) 51% repeat-x;
+    border: 1px solid var(--rule-strong);
+    border-radius: 10px;
+    box-shadow: 0 1px 0 var(--rule), 0 14px 32px -18px oklch(30% 0.05 70 / 0.35);
   }
   /* Share certificate: engraved frame and hatched share block. */
   .cert {
@@ -187,22 +180,10 @@
     transform-origin: left center;
     animation: fill 900ms 250ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
-  /* Cheque: guilloche wash and a VOID stripe when the market says no. */
-  .cheque {
-    background:
-      repeating-linear-gradient(-45deg, oklch(48.5% 0.109 61 / 0.05) 0 1px, transparent 1px 4px),
-      var(--cheque);
+  .quote-panel {
+    background: var(--cheque);
     border: 1px solid var(--rule-strong);
-    border-top: 2px dashed var(--rule-strong);
-  }
-  .void-mark {
-    border: 3px solid var(--stop);
-    color: var(--stop);
-    transform: rotate(-5deg);
-  }
-  .rise {
-    animation: rise 180ms ease-out both;
-    animation-delay: calc(var(--i, 0) * 40ms);
+    border-radius: 8px;
   }
 }
 
@@ -215,19 +196,7 @@
   }
 }
 
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .rise,
   .cert-sliver {
     animation: none;
   }

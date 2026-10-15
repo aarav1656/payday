@@ -15,8 +15,8 @@ const localTime = (ms: number) =>
   new Date(ms).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hour12: false });
 
 export function CashOut({
-  address, symbol, sellTokens, slipNo, accruedUsd, accruedShares, multiplier,
-}: { address: string; symbol: string; sellTokens: number; slipNo: string; accruedUsd: number; accruedShares: number; multiplier: number }) {
+  address, symbol, sellTokens, accruedUsd, accruedShares, multiplier,
+}: { address: string; symbol: string; sellTokens: number; accruedUsd: number; accruedShares: number; multiplier: number }) {
   const [state, setState] = useState<State>({ kind: "idle" });
 
   async function run() {
@@ -40,14 +40,14 @@ export function CashOut({
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <Button onClick={run} disabled={state.kind === "loading"} size="sm" aria-describedby={`dry-${symbol}`}>
           {state.kind === "loading"
-            ? "Writing the cheque"
+            ? "Quoting"
             : state.kind === "done" && state.quote.blocked
               ? state.quote.market.nextOpenTime
                 ? `Ask again at ${localTime(state.quote.market.nextOpenTime)}`
                 : "Ask again later"
               : state.kind === "done"
                 ? "Cash again"
-                : "Cash this cheque"}
+                : "Cash out the dividend"}
         </Button>
         <span id={`dry-${symbol}`} className="text-[0.8125rem] text-ink-3">
           Sells only the {tokens(sellTokens)} {symbol} tokens that carry the dividend.
@@ -58,34 +58,34 @@ export function CashOut({
       </div>
       <div aria-live="polite" className="mt-5 empty:hidden">
         {state.kind === "error" && <Note tone="stop">{state.message}</Note>}
-        {state.kind === "done" && <Cheque q={state.quote} address={address} slipNo={slipNo} symbol={symbol} accruedUsd={accruedUsd} />}
+        {state.kind === "done" && <Quote q={state.quote} address={address} symbol={symbol} accruedUsd={accruedUsd} />}
       </div>
     </div>
   );
 }
 
-/** The dry-run quote printed as a cheque. A refused quote prints VOID with the reason Binance gave. */
-export function Cheque({ q, address, slipNo, symbol, accruedUsd }: { q: CashOutQuote; address: string; slipNo: string; symbol: string; accruedUsd: number }) {
+/** The dry-run quote. A refused quote carries a No quote chip and the reason Binance gave. */
+export function Quote({ q, address, symbol, accruedUsd }: { q: CashOutQuote; address: string; symbol: string; accruedUsd: number }) {
   const [settle, setSettle] = useState<Settle>({ kind: "none" });
   const short = `${address.slice(0, 6)}…${address.slice(-4)}`;
   const void_ = q.blocked !== null;
   const sim = q.simulation;
   const refusal = void_ ? null : refuseCashOut({ statementAddress: address, connected: address, notionalUsd: Math.max(accruedUsd, q.expectUsdt ?? 0) });
   return (
-    <figure className="cheque relative grid overflow-hidden md:grid-cols-[minmax(0,1fr)_11rem]" aria-label={void_ ? "Void cheque" : "Cheque"}>
+    <figure className="quote-panel relative grid overflow-hidden md:grid-cols-[minmax(0,1fr)_11rem]" aria-label={void_ ? "Cash-out quote refused" : "Cash-out quote"}>
       <div className="p-5 md:p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-          <p className="label">Payday cheque · quote</p>
-          <p className="fig text-[0.8125rem] text-ink-2">No. {slipNo} · {utcTime(q.at)} UTC</p>
+          <p className="label">Cash-out quote</p>
+          <p className="fig text-[0.8125rem] text-ink-2">{utcTime(q.at)} UTC</p>
         </div>
 
-        <p className="label mt-5">Pay to the order of</p>
+        <p className="label mt-5">USDT goes to</p>
         <p className="fig mt-1 break-all text-[0.9375rem] font-bold">{short}</p>
 
         <div className="mt-4 flex items-end justify-between gap-4">
           <div className="min-w-0">
-            <p className="label">Memo</p>
-            <p className="fig mt-1 text-[0.8125rem] text-ink-2">Dividend on {tokens(q.sellTokens)} {q.symbol}</p>
+            <p className="label">Sells</p>
+            <p className="fig mt-1 text-[0.8125rem] text-ink-2">{tokens(q.sellTokens)} {q.symbol}, the dividend part only</p>
           </div>
           {void_ ? (
             <p className="label shrink-0 border-2 border-stop px-3 py-2.5 text-stop">No quote</p>
@@ -98,8 +98,7 @@ export function Cheque({ q, address, slipNo, symbol, accruedUsd }: { q: CashOutQ
 
         {void_ ? (
           <div className="mt-5 flex flex-wrap items-start gap-4">
-            <p className="void-mark label px-3 py-1 text-[1rem] tracking-[0.25em]">Void</p>
-            <div className="min-w-0 flex-1 basis-56 space-y-1.5 text-[0.875rem] text-ink-2">
+                        <div className="min-w-0 flex-1 basis-56 space-y-1.5 text-[0.875rem] text-ink-2">
               <p className="font-medium text-ink">{q.blocked!.message}</p>
               <p>
                 Market is {q.market.state ?? "closed"}
@@ -146,7 +145,7 @@ export function Cheque({ q, address, slipNo, symbol, accruedUsd }: { q: CashOutQ
         )}
       </div>
 
-      <dl className="fig grid grid-cols-2 gap-x-4 gap-y-3 border-t-2 border-dashed border-rule-strong p-5 text-[0.8125rem] md:block md:space-y-3 md:border-l-2 md:border-t-0 md:p-6">
+      <dl className="fig grid grid-cols-2 gap-x-4 gap-y-3 border-t border-rule-strong p-5 text-[0.8125rem] md:block md:space-y-3 md:border-l md:border-t-0 md:p-6">
         <div>
           <dt className="label">Route</dt>
           <dd>{q.vendor ? `${q.vendor} (${q.mode})` : "none"}</dd>
