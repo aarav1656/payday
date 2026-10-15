@@ -28,7 +28,7 @@ export async function StatementView({ address }: { address: string }) {
         <p className="label">Earnings statement</p>
       </div>
       <dl className="fig mt-6 grid grid-cols-2 gap-x-6 gap-y-3 text-[0.875rem]">
-        <Field term="Read at" value={`${utcTime(st.asOf)} UTC`} />
+        <Field term="Read at, UTC" value={utcTime(st.asOf)} />
         <Field term="Block" value={st.block.toLocaleString("en-US")} />
         <Field term="Tokens checked" value={`${st.scanned} Ondo`} />
         <div>
@@ -152,8 +152,8 @@ function Line({ h, address, asOf }: { h: HoldingLine; address: string; asOf: num
         {h.symbol} · {tokens(h.tokens)} held
       </p>
       <dl className="mt-4 grid grid-cols-3 gap-x-4">
-        <Cell term="Shares earned" value={tokens(h.accruedShares)} />
-        <Cell term="Price per share" value={h.stockUsd === null ? "n/a" : usd(h.stockUsd)} />
+        <Cell term="Shares" value={tokens(h.accruedShares)} />
+        <Cell term="Price" value={h.stockUsd === null ? "n/a" : usd(h.stockUsd)} />
         <Cell term="Amount" value={usd(h.accruedUsd)} strong />
       </dl>
       <p className="mt-3 max-w-[52ch] text-[0.9375rem] text-ink-2">{sentence(h)}</p>
@@ -168,6 +168,7 @@ function Line({ h, address, asOf }: { h: HoldingLine; address: string; asOf: num
   );
 }
 
+// status-chip: a line's state is a chip, never colour or plain text alone
 const CHIP: Record<HoldingLine["status"], { text: string; cls: string }> = {
   earning: { text: "Earning", cls: "border-ok/60 text-ok" },
   waiting: { text: "Waiting", cls: "border-rule-strong text-ink-3" },
@@ -177,7 +178,7 @@ const CHIP: Record<HoldingLine["status"], { text: string; cls: string }> = {
 
 function StatusChip({ status }: { status: HoldingLine["status"] }) {
   const c = CHIP[status];
-  return <span className={`fig inline-flex h-6 items-center rounded-full border px-2.5 text-[0.6875rem] font-bold uppercase tracking-[0.08em] ${c.cls}`}>{c.text}</span>;
+  return <span className={`status-chip fig inline-flex h-6 items-center rounded-full border px-2.5 text-[0.6875rem] font-bold uppercase tracking-[0.08em] ${c.cls}`}>{c.text}</span>;
 }
 
 function Cell({ term, value, strong = false }: { term: string; value: string; strong?: boolean }) {

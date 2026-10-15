@@ -9,9 +9,9 @@ export function Header() {
           {PAYDAY_NAME}
         </Link>
         <div className="flex items-center gap-5">
-        <span className="fig hidden items-center gap-2 rounded-full border border-rule-strong px-3 py-1 text-[0.75rem] text-ink-2 sm:inline-flex">
+        <span className="live-chip fig inline-flex items-center gap-2 rounded-full border border-rule-strong px-3 py-1 text-[0.75rem] text-ink-2">
           <span aria-hidden className="size-1.5 rounded-full bg-ok" />
-          BNB Chain, read live
+          <span className="sm:hidden">Live</span><span className="max-sm:hidden">BNB Chain, read live</span>
         </span>
         <Link
           href={`/?address=${EXAMPLE_ADDRESS}`}
