@@ -102,7 +102,7 @@ export function Quote({ q, address, symbol, accruedUsd }: { q: CashOutQuote; add
               <p className="font-medium text-ink">{q.blocked!.message}</p>
               <p>
                 {q.market.open
-                  ? "The US market is open, so this is the market maker's answer, not a closed session. Ask again in a few minutes."
+                  ? "The US market is open, so this is not a closed session: nobody is offering a price at the moment. Ask again in a few minutes."
                   : `The market is ${q.market.state ?? "closed"}.${q.market.nextOpenTime ? ` Next open ${utcTime(q.market.nextOpenTime)} UTC; ask again then.` : " Ask again when it opens."}`}{" "}
                 No transaction was signed.
               </p>

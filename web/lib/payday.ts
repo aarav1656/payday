@@ -228,7 +228,7 @@ export async function cashOutDryRun(rawAddress: string, symbol: string): Promise
     if (e instanceof Web3ApiError) return refused(e.kind, e.apiMsg);
     // rfqQuote throws a plain Error when Binance answers with no market-maker route; that is a refused quote, not a crash
     if (e instanceof Error && e.message.startsWith("rfqQuote: no RFQ route")) {
-      return refused("NO_ROUTE", `No Ondo market maker is quoting this sale through Binance right now.`);
+      return refused("NO_ROUTE", `Nobody on Binance is offering a price for this sale right now.`);
     }
     throw e;
   }
