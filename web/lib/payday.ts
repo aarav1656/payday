@@ -220,12 +220,15 @@ export async function cashOutDryRun(rawAddress: string, symbol: string): Promise
       blocked: null,
     };
   } catch (e) {
-    if (e instanceof Web3ApiError) {
-      return {
-        ...base, expectUsdt: null, vendor: null, mode: null, priceImpactPercent: null, approval: "needed",
-        simulation: { ran: false, target: "approval", ok: null, detail: "No quote, so nothing to simulate." },
-        blocked: { kind: e.kind, message: e.apiMsg },
-      };
+    const refused = (kind: string, message: string): CashOutQuote => ({
+      ...base, expectUsdt: null, vendor: null, mode: null, priceImpactPercent: null, approval: "needed",
+      simulation: { ran: false, target: "approval", ok: null, detail: "No quote, so nothing to simulate." },
+      blocked: { kind, message },
+    });
+    if (e instanceof Web3ApiError) return refused(e.kind, e.apiMsg);
+    // rfqQuote throws a plain Error when Binance answers with no market-maker route; that is a refused quote, not a crash
+    if (e instanceof Error && e.message.startsWith("rfqQuote: no RFQ route")) {
+      return refused("NO_ROUTE", `No Ondo market maker is quoting this sale through Binance right now.`);
     }
     throw e;
   }

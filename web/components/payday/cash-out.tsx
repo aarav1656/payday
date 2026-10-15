@@ -42,9 +42,9 @@ export function CashOut({
           {state.kind === "loading"
             ? "Quoting"
             : state.kind === "done" && state.quote.blocked
-              ? state.quote.market.nextOpenTime
+              ? !state.quote.market.open && state.quote.market.nextOpenTime
                 ? `Ask again at ${localTime(state.quote.market.nextOpenTime)}`
-                : "Ask again later"
+                : "Ask again"
               : state.kind === "done"
                 ? "Cash again"
                 : "Cash out the dividend"}
@@ -101,9 +101,10 @@ export function Quote({ q, address, symbol, accruedUsd }: { q: CashOutQuote; add
                         <div className="min-w-0 flex-1 basis-56 space-y-1.5 text-[0.875rem] text-ink-2">
               <p className="font-medium text-ink">{q.blocked!.message}</p>
               <p>
-                Market is {q.market.state ?? "closed"}
-                {q.market.reason ? ` (${q.market.reason})` : ""}.
-                {q.market.nextOpenTime ? ` Next open ${utcTime(q.market.nextOpenTime)} UTC.` : ""} Ask again then. No transaction was signed.
+                {q.market.open
+                  ? "The US market is open, so this is the market maker's answer, not a closed session. Ask again in a few minutes."
+                  : `The market is ${q.market.state ?? "closed"}.${q.market.nextOpenTime ? ` Next open ${utcTime(q.market.nextOpenTime)} UTC; ask again then.` : " Ask again when it opens."}`}{" "}
+                No transaction was signed.
               </p>
             </div>
           </div>
