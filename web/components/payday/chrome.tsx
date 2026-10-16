@@ -13,6 +13,9 @@ export function Header() {
           <span aria-hidden className="size-1.5 rounded-full bg-ok" />
           <span className="sm:hidden">Live</span><span className="max-sm:hidden">BNB Chain, read live</span>
         </span>
+        <Link href="/demo" className="hidden min-h-14 items-center whitespace-nowrap font-mono text-[0.875rem] text-ink-2 underline decoration-1 underline-offset-4 hover:text-ink sm:inline-flex">
+          Watch the demo
+        </Link>
         <Link
           href={`/?address=${EXAMPLE_ADDRESS}`}
           className="inline-flex min-h-14 items-center whitespace-nowrap font-mono text-[0.875rem] font-bold text-ochre underline decoration-1 underline-offset-4 hover:decoration-2"
